@@ -5,7 +5,7 @@
     #define LED_INVERTED    1
     #define APIN_VBAT       A0
     #define USART_INPUT     USART2  // UART2 RX=PA3 TX=PA2
-    #define OUTPUT_PIN_MAP  PA_15, PB_3, PB_10, PB_11, PA_6, PA_7, PB_0, PB_1 // TIM2 CH1-4, TIM3CH1-4
+    #define OUTPUT_PIN_MAP  PB_11, PB_10, PB_1_ALT1 ,PB_0_ALT1, PA_7_ALT1,  PA_6, PA_1_ALT1, PA_0_ALT1
 
 #elif defined(TARGET_CC3D)
     #define DPIN_LED        PB_3
