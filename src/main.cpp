@@ -40,6 +40,7 @@ static struct tagConnectionState {
     uint8_t serialInBuffLen;
     bool serialEcho;
 } g_State;
+uint32_t lastGPSRead = 0; 
 
 static void crsfShiftyByte(uint8_t b)
 {
@@ -141,12 +142,65 @@ static void checkVbatt()
 
     uint8_t crsfbatt[CRSF_FRAME_BATTERY_SENSOR_PAYLOAD_SIZE] = { 0 };
     uint16_t scaledVoltage = g_State.vbatValue * VBAT_SCALE;
+    scaledVoltage= 200 ; //20V 
     crsfbatt[0] = scaledVoltage >> 8;
     crsfbatt[1] = scaledVoltage & 0xff;
+    scaledVoltage= 301 ; //30.1a
+    crsfbatt[2] = scaledVoltage >> 8;
+    crsfbatt[3] = scaledVoltage & 0xff;
+    scaledVoltage= 102 ; // mah maybe
+    crsfbatt[4] = scaledVoltage >> 8;
+    crsfbatt[5] = scaledVoltage & 0xff;
+    scaledVoltage= 103 ; // mah maybe
+    crsfbatt[6] = scaledVoltage >> 8;
+    crsfbatt[7] = scaledVoltage & 0xff;
     crsf.queuePacket(CRSF_SYNC_BYTE, CRSF_FRAMETYPE_BATTERY_SENSOR, &crsfbatt, sizeof(crsfbatt));
 
     //Serial.print("ADC="); Serial.print(adc, DEC);
     //Serial.print(" "); Serial.print(g_State.vbatValue, DEC); Serial.println("V");
+}
+
+static void checkGPS()
+{
+		
+	if( ( millis() - lastGPSRead ) < 1000 )return ; 
+	lastGPSRead = millis();
+
+	uint8_t crsfgps[15] = { 0 };
+	//Latitude
+	uint32_t gpsval2pack = 12 * 10000000UL + (34 * 1000000UL + 56 * 100UL) / 6 ; 
+	crsfgps[0] = gpsval2pack >> 24;
+	crsfgps[1] = gpsval2pack >> 16;
+	crsfgps[2] = gpsval2pack >> 8;
+	crsfgps[3] = gpsval2pack & 0xff;
+	
+	//Longitude
+	gpsval2pack = 78 * 10000000UL + (90 * 1000000UL + 12 * 100UL) / 6 ;	; 
+	crsfgps[4] = gpsval2pack >> 24;
+	crsfgps[5] = gpsval2pack >> 16;
+	crsfgps[6] = gpsval2pack >> 8;
+	crsfgps[7] = gpsval2pack & 0xff;
+	
+	//gps speed
+	gpsval2pack = 1600 ; //160kmh
+	crsfgps[8] = gpsval2pack >> 8;
+	crsfgps[9] = gpsval2pack & 0xff;
+	
+	//gps heading
+	gpsval2pack = 1000 ; 
+	crsfgps[10] = gpsval2pack >> 8;
+	crsfgps[11] = gpsval2pack & 0xff;
+	
+	//gps altitude
+	int16_t altval2pack = 8848 ; //7848m altitude
+	crsfgps[12] = altval2pack >> 8;
+	crsfgps[13] = altval2pack & 0xff;
+	
+	//Satellites count
+	gpsval2pack = 8 ; 
+	crsfgps[14] = gpsval2pack & 0xff;
+	
+	crsf.queuePacket(CRSF_SYNC_BYTE, 0x02, &crsfgps, sizeof(crsfgps));
 }
 
 static void setupCrsf()
@@ -183,6 +237,7 @@ void loop()
 {
     crsf.loop();
     //checkVbatt();
+    checkGPS();
 }
 
 
