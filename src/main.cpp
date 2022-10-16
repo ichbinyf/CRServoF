@@ -236,7 +236,7 @@ void setup()
 void loop()
 {
     crsf.loop();
-    //checkVbatt();
+    checkVbatt();
     checkGPS();
 }
 
